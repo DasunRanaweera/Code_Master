@@ -23,7 +23,7 @@ public class LikeController {
     @GetMapping("/{postId}")
     public ResponseEntity<List<Like>> getLikesByPostId(@PathVariable String postId) {
         List<Like> likes = likeRepository.findByPostId(postId);
-        return new ResponseEntity<>(likes, HttpStatus.OK);
+        return new ResponseEntity<>(likes, HttpStatus.OK);//
     }
 
       @PostMapping
