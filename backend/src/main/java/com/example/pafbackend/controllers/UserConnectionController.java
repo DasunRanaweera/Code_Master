@@ -15,11 +15,17 @@ public class UserConnectionController {
 
     private final UserConnectionRepository userConnectionRepository;
 
+    // Constructor-based dependency injection
     @Autowired
     public UserConnectionController(UserConnectionRepository userConnectionRepository) {
         this.userConnectionRepository = userConnectionRepository;
     }
 
+    /**
+     * GET endpoint to fetch user connection data by userId
+     * @param userId the ID of the user
+     * @return UserConnection data if found, otherwise 404 NOT FOUND
+     */
     @GetMapping("/{userId}")
     public ResponseEntity<UserConnection> getUserConnections(@PathVariable String userId) {
         UserConnection userConnection = userConnectionRepository.findByUserId(userId);
@@ -30,6 +36,13 @@ public class UserConnectionController {
         }
     }
 
+    /**
+     * POST endpoint to create or update a user's connections
+     * - If the user already has a connection record, append the new friendIds
+     * - If not, create a new record with the provided userId and friendIds
+     * @param userConnection the user connection data to be created or updated
+     * @return ResponseEntity with the created/updated UserConnection and status code
+     */
     @PostMapping
     public ResponseEntity<UserConnection> createUserConnection(@RequestBody UserConnection userConnection) {
         // Check if a document with the userId already exists
@@ -38,7 +51,7 @@ public class UserConnectionController {
             // Update the existing document by adding new friendIds
             List<String> currentFriendIds = existingConnection.getFriendIds();
             List<String> newFriendIds = userConnection.getFriendIds();
-            currentFriendIds.addAll(newFriendIds);
+            currentFriendIds.addAll(newFriendIds); // Append new friend IDs
             existingConnection.setFriendIds(currentFriendIds);
             UserConnection updatedConnection = userConnectionRepository.save(existingConnection);
             return new ResponseEntity<>(updatedConnection, HttpStatus.OK);
@@ -49,6 +62,12 @@ public class UserConnectionController {
         }
     }
 
+    /**
+     * DELETE endpoint to remove a friend connection from a user's friend list
+     * @param userId the user ID
+     * @param friendId the friend ID to be removed
+     * @return 204 NO CONTENT if successful, 404 NOT FOUND if user not found
+     */
     @DeleteMapping("/{userId}/friends/{friendId}")
     public ResponseEntity<Void> unfriend(@PathVariable String userId, @PathVariable String friendId) {
         // Check if a document with the userId exists
@@ -56,15 +75,14 @@ public class UserConnectionController {
         if (existingConnection != null) {
             // Remove the friendId from the list of friendIds
             List<String> currentFriendIds = existingConnection.getFriendIds();
-            currentFriendIds.remove(friendId);
+            currentFriendIds.remove(friendId); // Remove the specified friend
             existingConnection.setFriendIds(currentFriendIds);
-            userConnectionRepository.save(existingConnection);
+            userConnectionRepository.save(existingConnection); // Save the updated connection
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
             // No existing document, return 404
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
 
 }
